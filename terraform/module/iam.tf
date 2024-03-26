@@ -14,7 +14,7 @@ resource "aws_iam_access_key" "key" {
   user = aws_iam_user.user.name
 }
 
-# IAMポリシードキュメント IAMアクション
+# IAMポリシードキュメント IAMアクション用
 data "aws_iam_policy_document" "iam_action" {
   statement {
     effect = "Allow"
@@ -30,26 +30,26 @@ data "aws_iam_policy_document" "iam_action" {
   }
 }
 
-# IAMポリシー IAMアクション
+# IAMポリシー IAMアクション用
 resource "aws_iam_policy" "policy" {
   name   = "${var.project}-iam-policy"
   policy = data.aws_iam_policy_document.iam_action.json
 }
 
-# アタッチ  IAMアクション
+# IMAポリシーアタッチ  IAMアクション用
 resource "aws_iam_user_policy_attachment" "attachment" {
   user   = aws_iam_user.user.name
   policy_arn  = aws_iam_policy.policy.arn
 }
 
 # IAMポリシー 権限付与シェル用
-resource "aws_iam_policy" "add_policy" {
-  name   = "${var.project}-add-policy"
+resource "aws_iam_policy" "target_policy" {
+  name   = "${var.project}-target-policy"
   policy = data.aws_iam_policy_document.iam_action.json
 }
 
 # アタッチ  権限付与シェル用
-resource "aws_iam_user_policy_attachment" "add_attachment" {
+resource "aws_iam_user_policy_attachment" "target_attachment" {
   user   = aws_iam_user.user.name
-  policy_arn  = aws_iam_policy.add_policy.arn
+  policy_arn  = aws_iam_policy.target_policy.arn
 }
