@@ -32,5 +32,5 @@ terraform.rc
 # Custom
 env.sh
 command.txt
-error_message.txt
+output_log_*.txt
 policy_document.json
