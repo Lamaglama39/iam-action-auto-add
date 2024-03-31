@@ -17,6 +17,17 @@ function get_iam_policy() {
 	log_output "GetPolicy : ${TARGET_IAM_POLICY_ARN}"
 }
 
+# IAMポリシー 既存権限チェック
+# 追加対象の権限がすでに付与されている場合は処理をスキップ
+function check_iam_policy() {
+  local -r add_action=$1
+
+	if grep -q "${add_action}" "${IAM_POLICY_JSON}" ; then
+		log_output "Action is already included in the permission."
+		return 1
+	fi
+}
+
 # IAMポリシー バージョニング処理
 # バージョンが5以上であれば、もっとも古いものを削除する
 function versioning_iam_policy() {
@@ -49,7 +60,7 @@ function update_iam_policy() {
 	#追記したファイルをもとにIAMポリシーを更新する
 	aws iam create-policy-version \
 		--policy-arn "${TARGET_IAM_POLICY_ARN}" \
-		--policy-document file://$(pwd)/policy_document.json \
+		--policy-document file://"${IAM_POLICY_JSON}" \
 		--set-as-default \
 		> /dev/null
 
