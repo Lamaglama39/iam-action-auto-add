@@ -8,6 +8,7 @@ source "${SCRIPT_DIR}/function.sh"
 
 #実行対象 コマンドリスト
 export COMMAND_LIST="${SCRIPT_DIR}/command.txt"
+export IAM_POLICY_JSON="${SCRIPT_DIR}/policy_document.json"
 
 #実行結果 ログfile
 declare OUTPUT_FILE
@@ -26,16 +27,30 @@ function main() {
       log_output "RunCommand : ${command}"
 			if ! response=$(eval "${command}" --output text 2>&1 | sed -z 's/\n//g'); then
 
-        #権限不足エラーが発生した場合
-				#エラーメッセージを出力
+        #権限不足エラーが発生した場合、エラーメッセージを出力
 				log_output "ErrorMessage : ${response}"
 
 				#不足権限 取得
 				target_action=$(printf "%s" "$response" | awk -F"perform: " '{print $2}' | awk '{print $1}' | sed -z 's/\n//g')
-				log_output "AddTargetAction : ${target_action}"
+
+				#該当のアクションが存在するか確認
+				if [[ -z "${target_action}" ]]; then
+					log_output "Targetaction is empty."
+					break
+				elif grep -q "${target_action}" "data/iam_actions.txt"; then
+					log_output "AddTargetAction : ${target_action}"
+				else
+					log_output "Unknown Action : ${target_action}"
+					break
+				fi
 
 				# IAMポリシー取得
 				get_iam_policy
+
+				# IAMポリシーチェック処理
+        if ! check_iam_policy "${target_action}"; then
+          break
+        fi
 
 				# IAMポリシー バージョニング処理
 				versioning_iam_policy
